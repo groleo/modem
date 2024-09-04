@@ -34,8 +34,7 @@ class Modem(object):
             '0xd5e3'
 
         '''
-        for byte in data:
-            crc = crc16(byte, crc)
+        crc = crc16(data, crc)
         return crc
 
     def calc_crc32(self, data, crc=0):
@@ -49,8 +48,7 @@ class Modem(object):
             '0x20ad'
 
         '''
-        for byte in data:
-            crc = crc32(byte, crc)
+        crc = crc32(data, crc)
         return crc
 
     def _check_crc(self, data, crc_mode):
