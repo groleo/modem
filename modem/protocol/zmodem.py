@@ -103,6 +103,7 @@ class ZMODEM(Modem):
 
     def _recv_raw(self, timeout):
         char = self.getc(1, timeout)
+        log.debug('Receive RAW: %x' % char)
         if char == '':
             return const.TIMEOUT
         if char is not const.TIMEOUT:
@@ -204,6 +205,7 @@ class ZMODEM(Modem):
         error_count = 0
         char = None
         while header_length == 0:
+            log.debug('Receiving header')
             # Frist ZPAD
             while char != const.ZPAD:
                 char = self._recv_raw(timeout)
