@@ -1,12 +1,13 @@
 import threading
+import traceback
 import time
-import StringIO
-import Queue
+from io import StringIO
+import queue
 import sys
 from xmodem import XMODEM
 
 class FakeIO(object):
-    streams = [Queue.Queue(), Queue.Queue()]
+    streams = [queue.Queue(), queue.Queue()]
     stdin = []
     stdot = []
     delay = 0.01 # simulate modem delays
@@ -14,22 +15,27 @@ class FakeIO(object):
     def putc(self, data, q=0):
         for char in data:
             self.streams[1-q].put(char)
-            print 'p%d(0x%x)' % (q, ord(char)),
+            print('PUT%d(0x%x)' % (q, char), end=' ')
             sys.stdout.flush()
         return len(data)
 
     def getc(self, size, q=0):
         data = []
+        #traceback.print_stack()
         while size:
             try:
                 char = self.streams[q].get()
-                print 'r%d(0x%x)' % (q, ord(char)),
+                print('GET%d(0x%x)' % (q, char), end=' ')
                 sys.stdout.flush()
                 data.append(char)
                 size -= 1
-            except Queue.Empty:
+            except queue.Empty:
                 return None
-        return ''.join(data)
+        print()
+        bdata = bytearray(data)
+        s = bytes(bdata).decode('utf-8')
+        print(f"{s}")
+        return s
 
 class Client(threading.Thread):
     def __init__(self, io, server, filename):
@@ -46,13 +52,13 @@ class Client(threading.Thread):
 
     def run(self):
         self.xmodem = XMODEM(self.getc, self.putc)
-        print 'c.send', self.xmodem.send(self.stream)
+        print('c.send', self.xmodem.send(self.stream))
 
 class Server(FakeIO, threading.Thread):
     def __init__(self, io):
         threading.Thread.__init__(self)
         self.io     = io
-        self.stream = StringIO.StringIO()
+        self.stream = StringIO()
 
     def getc(self, data, timeout=0):
         return self.io.getc(data, 1)
@@ -62,9 +68,9 @@ class Server(FakeIO, threading.Thread):
 
     def run(self):
         self.xmodem = XMODEM(self.getc, self.putc)
-        print 's.recv', self.xmodem.recv(self.stream)
-        print 'got'
-        print self.stream.getvalue()
+        print('s.recv', self.xmodem.recv(self.stream))
+        print('got')
+        print(self.stream.getvalue())
 
 if __name__ == '__main__':
     i = FakeIO()
@@ -72,4 +78,3 @@ if __name__ == '__main__':
     c = Client(i, s, sys.argv[1])
     s.start()
     c.start()
-

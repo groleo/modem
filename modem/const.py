@@ -289,7 +289,6 @@ NAK = b'\x15'
 CAN = b'\x18'
 CRC = b'\x43'
 
-TIMEOUT = None
 ZPAD = 0x2a
 ZDLE = 0x18
 ZDLEE = 0x58
